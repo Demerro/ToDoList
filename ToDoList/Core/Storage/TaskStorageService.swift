@@ -12,9 +12,11 @@ import os.log
 final class TaskStorageService {
     
     let coreDataStack: CoreDataStack
+    let backgroundContext: NSManagedObjectContext
     
     init(coreDataStack: CoreDataStack) {
         self.coreDataStack = coreDataStack
+        self.backgroundContext = coreDataStack.makeBackgroundContext()
     }
 }
 
@@ -40,12 +42,12 @@ extension TaskStorageService {
 extension TaskStorageService {
     
     func getAllTasks(_ completion: @escaping (Result<[TaskEntity], Error>) -> Void) {
-        let context = coreDataStack.makeBackgroundContext()
-        context.perform {
+        backgroundContext.perform { [weak self] in
+            guard let self else { return }
             let fetchRequest = TaskEntity.fetchRequest()
             fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \TaskEntity.date, ascending: false)]
             do {
-                completion(.success(try context.fetch(fetchRequest)))
+                completion(.success(try backgroundContext.fetch(fetchRequest)))
                 Logger.storage.info("Successfully fetched tasks.")
             } catch {
                 completion(.failure(error))
@@ -58,12 +60,11 @@ extension TaskStorageService {
 extension TaskStorageService {
     
     func update(uuid: UUID, title: String) {
-        let context = coreDataStack.makeBackgroundContext()
-        context.perform { [weak self] in
+        backgroundContext.perform { [weak self] in
             guard let self else { return }
-            if let taskEntity = try? context.fetch(self.makeFetchRequest(uuid: uuid)).first {
+            if let taskEntity = try? backgroundContext.fetch(self.makeFetchRequest(uuid: uuid)).first {
                 taskEntity.title = title
-                coreDataStack.save(context: context)
+                coreDataStack.save(context: backgroundContext)
                 Logger.storage.info("Task \(uuid) title updated to \(title).")
             } else {
                 Logger.storage.error("Task with UUID \(uuid) not found for title update.")
@@ -72,12 +73,11 @@ extension TaskStorageService {
     }
     
     func update(uuid: UUID, taskDescription: String) {
-        let context = coreDataStack.makeBackgroundContext()
-        context.perform { [weak self] in
+        backgroundContext.perform { [weak self] in
             guard let self else { return }
-            if let taskEntity = try? context.fetch(makeFetchRequest(uuid: uuid)).first {
+            if let taskEntity = try? backgroundContext.fetch(makeFetchRequest(uuid: uuid)).first {
                 taskEntity.taskDescription = taskDescription
-                coreDataStack.save(context: context)
+                coreDataStack.save(context: backgroundContext)
                 Logger.storage.info("Task \(uuid) description updated to \(taskDescription).")
             } else {
                 Logger.storage.error("Task with UUID \(uuid) not found for description update.")
@@ -86,12 +86,11 @@ extension TaskStorageService {
     }
     
     func update(uuid: UUID, date: Date) {
-        let context = coreDataStack.makeBackgroundContext()
-        context.perform { [weak self] in
+        backgroundContext.perform { [weak self] in
             guard let self else { return }
-            if let taskEntity = try? context.fetch(makeFetchRequest(uuid: uuid)).first {
+            if let taskEntity = try? backgroundContext.fetch(makeFetchRequest(uuid: uuid)).first {
                 taskEntity.date = date
-                coreDataStack.save(context: context)
+                coreDataStack.save(context: backgroundContext)
                 Logger.storage.info("Task \(uuid) date updated to \(date).")
             } else {
                 Logger.storage.error("Task with UUID \(uuid) not found for date update.")
@@ -100,12 +99,11 @@ extension TaskStorageService {
     }
     
     func update(uuid: UUID, isCompleted: Bool) {
-        let context = coreDataStack.makeBackgroundContext()
-        context.perform { [weak self] in
+        backgroundContext.perform { [weak self] in
             guard let self else { return }
-            if let taskEntity = try? context.fetch(makeFetchRequest(uuid: uuid)).first {
+            if let taskEntity = try? backgroundContext.fetch(makeFetchRequest(uuid: uuid)).first {
                 taskEntity.isCompleted = isCompleted
-                coreDataStack.save(context: context)
+                coreDataStack.save(context: backgroundContext)
                 Logger.storage.info("Task \(uuid) completion status updated to \(isCompleted).")
             } else {
                 Logger.storage.error("Task with UUID \(uuid) not found for completion status update.")
@@ -117,13 +115,12 @@ extension TaskStorageService {
 extension TaskStorageService {
     
     func delete(uuid: UUID) {
-        let context = coreDataStack.makeBackgroundContext()
-        context.perform { [weak self] in
+        backgroundContext.perform { [weak self] in
             guard let self else { return }
             let fetchRequest = makeFetchRequest(uuid: uuid, includesPropertyValues: false)
-            if let taskEntity = try? context.fetch(fetchRequest).first {
-                context.delete(taskEntity)
-                coreDataStack.save(context: context)
+            if let taskEntity = try? backgroundContext.fetch(fetchRequest).first {
+                backgroundContext.delete(taskEntity)
+                coreDataStack.save(context: backgroundContext)
                 Logger.storage.info("Task \(uuid) deleted successfully.")
             } else {
                 Logger.storage.error("Task with UUID \(uuid) not found for deletion.")
