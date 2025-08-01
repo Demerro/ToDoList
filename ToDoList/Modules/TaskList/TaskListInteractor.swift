@@ -45,12 +45,14 @@ extension TaskListInteractor {
             switch result {
             case .success(let data):
                 do {
+                    Logger.taskList.info("Successfully fetched tasks from network.")
                     presenter.didReceiveDTOs(try jsonDecoder.decode(TaskResults.self, from: data).todos)
                 } catch {
                     Logger.taskList.error("Failed to decode tasks: \(error)")
                     presenter.didFailToReceiveTasks(with: error)
                 }
             case .failure(let error):
+                Logger.taskList.error("Failed to fetch tasks from network: \(error)")
                 presenter.didFailToReceiveTasks(with: error)
             }
         }
@@ -61,8 +63,10 @@ extension TaskListInteractor {
             guard let presenter else { return }
             switch result {
             case .success(let entities):
+                Logger.taskList.info("Successfully fetched tasks from storage.")
                 presenter.didReceiveTaskEntities(entities)
             case .failure(let error):
+                Logger.taskList.error("Failed to fetch tasks from storage: \(error)")
                 presenter.didFailToReceiveTasks(with: error)
             }
         }
