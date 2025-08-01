@@ -14,9 +14,9 @@ struct TaskListModuleBuilder {
         let interactor = TaskListInteractor(networkService: networkService, taskStorageService: taskStorageService)
         let presenter = TaskListPresenter(view: view, interactor: interactor)
         
-        view.output = presenter
-        interactor.output = presenter
-
+        view.presenter = presenter
+        interactor.presenter = presenter
+        
         return view
     }
 }

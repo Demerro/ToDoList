@@ -9,7 +9,7 @@ import CoreData
 
 final class TaskEntity: NSManagedObject {
     
-    @NSManaged var uuid: UUID
+    @NSManaged var id: Int
     @NSManaged var title: String
     @NSManaged var taskDescription: String
     @NSManaged var date: Date

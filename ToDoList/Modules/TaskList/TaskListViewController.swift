@@ -7,21 +7,24 @@
 
 import UIKit
 
-protocol TaskListViewInput: AnyObject {
-}
-
-protocol TaskListViewOutput: AnyObject {
+protocol TaskListViewToPresenterProtocol: AnyObject {
+    func getTasks()
 }
 
 final class TaskListViewController: UIViewController {
     
-    weak var output: TaskListViewOutput? = nil
+    weak var presenter: TaskListViewToPresenterProtocol? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemPurple
+        presenter?.getTasks()
     }
 }
 
-extension TaskListViewController: TaskListViewInput {
+extension TaskListViewController: TaskListPresenterToViewProtocol {
+    
+    func displayTasks(_ tasks: [Task]) {
+        print(tasks)
+    }
 }

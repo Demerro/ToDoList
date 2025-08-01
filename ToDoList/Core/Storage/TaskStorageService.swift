@@ -22,12 +22,12 @@ final class TaskStorageService {
 
 extension TaskStorageService {
     
-    func create(title: String, taskDescription: String, date: Date, isCompleted: Bool, completion: ((Error?) -> Void)? = nil) {
+    func create(id: Int, title: String, taskDescription: String, date: Date, isCompleted: Bool, completion: ((Error?) -> Void)? = nil) {
         let context = coreDataStack.makeBackgroundContext()
         context.perform { [weak coreDataStack] in
             guard let coreDataStack else { return }
             let taskEntity = TaskEntity(context: context)
-            taskEntity.uuid = UUID()
+            taskEntity.id = id
             taskEntity.title = title
             taskEntity.taskDescription = taskDescription
             taskEntity.date = date

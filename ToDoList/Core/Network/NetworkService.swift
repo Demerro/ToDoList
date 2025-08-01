@@ -48,7 +48,7 @@ extension NetworkService {
             }
             Logger.network.info("Network request succeeded with status code: \(response.statusCode)")
             completion(.success(data))
-        }
+        }.resume()
     }
 }
 
