@@ -1,5 +1,5 @@
 //
-//  Logger+Category.swift
+//  Logger+NetworkCategory.swift
 //  ToDoList
 //
 //  Created by Nikita Prokhorchuk on 1.08.25.
