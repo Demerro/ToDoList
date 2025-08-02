@@ -18,6 +18,7 @@ final class AppRouter {
 
     init(dependencies: AppDependencyContainer) {
         self.dependencies = dependencies
+        navigationController.navigationBar.prefersLargeTitles = true
     }
 
     func showTaskList() {
