@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol AppRouterProtocol: AnyObject {
+    func showErrorAlert(title: String, message: String)
+}
+
 final class AppRouter {
     
     let navigationController = UINavigationController()
@@ -17,7 +21,15 @@ final class AppRouter {
     }
 
     func showTaskList() {
-        let module = TaskListModuleBuilder.build(networkService: dependencies.networkService, taskStorageService: dependencies.taskStorageService)
+        let module = TaskListModuleBuilder.build(appRouter: self, networkService: dependencies.networkService, taskStorageService: dependencies.taskStorageService)
         navigationController.setViewControllers([module], animated: false)
+    }
+}
+
+extension AppRouter: AppRouterProtocol {
+    
+    func showErrorAlert(title: String, message: String) {
+        let alertViewController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        navigationController.present(alertViewController, animated: true)
     }
 }

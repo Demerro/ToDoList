@@ -17,10 +17,12 @@ protocol TaskListPresenterToInteractorProtocol: AnyObject {
 
 final class TaskListPresenter {
     
+    let router: AppRouterProtocol
     let view: TaskListPresenterToViewProtocol
     let interactor: TaskListPresenterToInteractorProtocol
     
-    init(view: TaskListPresenterToViewProtocol, interactor: TaskListPresenterToInteractorProtocol) {
+    init(router: AppRouterProtocol, view: TaskListPresenterToViewProtocol, interactor: TaskListPresenterToInteractorProtocol) {
+        self.router = router
         self.view = view
         self.interactor = interactor
     }
@@ -54,6 +56,8 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     }
     
     func didFailToReceiveTasks(with error: any Error) {
-        
+        DispatchQueue.main.async {
+            self.router.showErrorAlert(title: "Oops! An error occurred.", message: error.localizedDescription)
+        }
     }
 }
