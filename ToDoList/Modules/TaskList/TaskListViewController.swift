@@ -13,18 +13,70 @@ protocol TaskListViewToPresenterProtocol: AnyObject {
 
 final class TaskListViewController: UIViewController {
     
+    private let collectionView: UICollectionView = {
+        let layoutConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
+        let layout = UICollectionViewCompositionalLayout.list(using: layoutConfiguration)
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        collectionView.showsHorizontalScrollIndicator = false
+        return collectionView
+    }()
+    
+    private var tasks = [Task]()
+    
+    private lazy var dataSource = makeDiffableDataSource()
+    
     weak var presenter: TaskListViewToPresenterProtocol? = nil
+    
+    override func loadView() {
+        view = collectionView
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemPurple
+        title = "Задачи"
         presenter?.getTasks()
+    }
+}
+
+extension TaskListViewController {
+    
+    private func makeDiffableDataSource() -> UICollectionViewDiffableDataSource<Section, Item> {
+        let cellRegistration = makeCellRegistration()
+        return .init(collectionView: collectionView) { collectionView, indexPath, itemIdentifier in
+            collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: itemIdentifier)
+        }
+    }
+    
+    private func makeCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Item> {
+        .init { [unowned self] cell, indexPath, itemIdentifier in
+            var configuration = cell.defaultContentConfiguration()
+            configuration.text = tasks[indexPath.item].title
+            cell.contentConfiguration = configuration
+        }
+    }
+    
+    private func setupSnapshot(for items: [Int]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(items, toSection: .main)
+        dataSource.apply(snapshot)
     }
 }
 
 extension TaskListViewController: TaskListPresenterToViewProtocol {
     
     func displayTasks(_ tasks: [Task]) {
-        print(tasks)
+        self.tasks = tasks
+        setupSnapshot(for: tasks.map(\.id))
     }
+}
+
+extension TaskListViewController {
+    
+    private enum Section {
+        case main
+    }
+    
+    private typealias Item = Int
 }

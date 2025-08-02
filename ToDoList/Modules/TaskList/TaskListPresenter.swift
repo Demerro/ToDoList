@@ -39,14 +39,18 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
         let tasks = taskDTOs.map {
             Task(id: $0.id, title: $0.todo, isCompleted: $0.completed, date: Date())
         }
-        view.displayTasks(tasks)
+        DispatchQueue.main.async {
+            self.view.displayTasks(tasks)
+        }
     }
     
     func didReceiveTaskEntities(_ entities: [TaskEntity]) {
         let tasks = entities.map {
             Task(id: $0.id, title: $0.title, isCompleted: $0.isCompleted, date: $0.date)
         }
-        view.displayTasks(tasks)
+        DispatchQueue.main.async {
+            self.view.displayTasks(tasks)
+        }
     }
     
     func didFailToReceiveTasks(with error: any Error) {
