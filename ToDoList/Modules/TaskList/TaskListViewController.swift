@@ -29,6 +29,8 @@ final class TaskListViewController: UIViewController {
         return formatter
     }()
     
+    private let searchController = UISearchController(searchResultsController: nil)
+    
     private var tasks = [Task]()
     
     private lazy var dataSource = makeDiffableDataSource()
@@ -43,6 +45,9 @@ final class TaskListViewController: UIViewController {
         super.viewDidLoad()
         title = "Задачи"
         collectionView.delegate = self
+        searchController.searchResultsUpdater = self
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
         presenter?.getTasks()
     }
 }
@@ -95,6 +100,15 @@ extension TaskListViewController: UICollectionViewDelegate {
             ]
             return UIMenu(title: "", children: actions)
         })
+    }
+}
+
+extension TaskListViewController: UISearchResultsUpdating {
+    
+    func updateSearchResults(for searchController: UISearchController) {
+        guard let searchText = searchController.searchBar.text, !searchText.isEmpty else { return }
+        let filteredTasks = tasks.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        filteredTasks.isEmpty ? setupSnapshot(for: tasks.map(\.id)) : setupSnapshot(for: filteredTasks.map(\.id))
     }
 }
 
