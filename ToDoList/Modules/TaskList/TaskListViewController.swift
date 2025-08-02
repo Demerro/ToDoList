@@ -42,6 +42,7 @@ final class TaskListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Задачи"
+        collectionView.delegate = self
         presenter?.getTasks()
     }
 }
@@ -80,6 +81,20 @@ extension TaskListViewController: TaskListPresenterToViewProtocol {
     func displayTasks(_ tasks: [Task]) {
         self.tasks = tasks
         setupSnapshot(for: tasks.map(\.id))
+    }
+}
+
+extension TaskListViewController: UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
+        UIContextMenuConfiguration(actionProvider:  { _ in
+            let actions = [
+                UIAction(title: "Редактировать", image: UIImage(systemName: "square.and.pencil")!, handler: { _ in }),
+                UIAction(title: "Поделиться", image: UIImage(systemName: "square.and.arrow.up")!, handler: { _ in }),
+                UIAction(title: "Удалить", image: UIImage(systemName: "trash")!, attributes: .destructive, handler: { _ in }),
+            ]
+            return UIMenu(title: "", children: actions)
+        })
     }
 }
 
