@@ -22,6 +22,13 @@ final class TaskListViewController: UIViewController {
         return collectionView
     }()
     
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.locale = Locale(languageCode: .english, languageRegion: .unitedStates)
+        return formatter
+    }()
+    
     private var tasks = [Task]()
     
     private lazy var dataSource = makeDiffableDataSource()
@@ -48,11 +55,15 @@ extension TaskListViewController {
         }
     }
     
-    private func makeCellRegistration() -> UICollectionView.CellRegistration<UICollectionViewListCell, Item> {
+    private func makeCellRegistration() -> UICollectionView.CellRegistration<TaskListCollectionViewCell, Item> {
         .init { [unowned self] cell, indexPath, itemIdentifier in
+            let task = tasks[indexPath.item]
             var configuration = cell.defaultContentConfiguration()
-            configuration.text = tasks[indexPath.item].title
-            cell.contentConfiguration = configuration
+            configuration.isCompleted = task.isCompleted
+            configuration.title = task.title
+            configuration.description = task.description
+            configuration.createdAt = dateFormatter.string(from: task.date)
+            cell.configuration = configuration
         }
     }
     
