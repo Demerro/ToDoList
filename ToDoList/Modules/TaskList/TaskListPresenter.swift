@@ -16,6 +16,7 @@ protocol TaskListPresenterToViewProtocol: AnyObject {
 protocol TaskListPresenterToInteractorProtocol: AnyObject {
     func getTasks()
     func deleteTask(_ task: Task)
+    func completeTask(_ task: Task)
 }
 
 final class TaskListPresenter {
@@ -47,6 +48,10 @@ extension TaskListPresenter: TaskListViewToPresenterProtocol {
     func shareTask(_ task: Task) {
         router.showActivityViewController(for: task)
     }
+    
+    func completeTask(_ task: Task) {
+        interactor?.completeTask(task)
+    }
 }
 
 extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
@@ -66,7 +71,7 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
         }
     }
     
-    func didFailToReceiveTasks(with error: any Error) {
+    func didFail(with error: any Error) {
         DispatchQueue.main.async {
             self.router.showErrorAlert(title: "Oops! An error occurred.", message: error.localizedDescription)
         }
@@ -75,6 +80,12 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     func didDeleteTask(with id: Int) {
         DispatchQueue.main.async {
             self.view?.deleteTask(with: id)
+        }
+    }
+    
+    func didCompleteTask(_ task: Task) {
+        DispatchQueue.main.async {
+            self.view?.reconfigureTask(task)
         }
     }
 }

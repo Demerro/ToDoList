@@ -10,7 +10,7 @@ import Foundation
 struct Task: Identifiable {
     let id: Int
     let title: String
-    let isCompleted: Bool
+    var isCompleted: Bool
     let date: Date
     var description: String?
 }

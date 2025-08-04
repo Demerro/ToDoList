@@ -11,8 +11,9 @@ import os.log
 protocol TaskListInteractorToPresenterProtocol: AnyObject {
     func didReceiveTasks(_ tasks: [Task])
     func didReceiveTaskEntities(_ entities: [TaskEntity])
-    func didFailToReceiveTasks(with error: Error)
+    func didFail(with error: Error)
     func didDeleteTask(with id: Int)
+    func didCompleteTask(_ task: Task)
 }
 
 final class TaskListInteractor {
@@ -41,10 +42,23 @@ extension TaskListInteractor: TaskListPresenterToInteractorProtocol {
         taskStorageService.delete(id: task.id) { [weak self] error in
             if let error {
                 Logger.taskList.error("Failed to delete task: \(error)")
-                self?.presenter.didFailToReceiveTasks(with: error)
+                self?.presenter.didFail(with: error)
             } else {
                 Logger.taskList.info("Successfully deleted task: \(task.id)")
                 self?.presenter.didDeleteTask(with: task.id)
+            }
+        }
+    }
+    
+    func completeTask(_ task: consuming Task) {
+        taskStorageService.update(id: task.id, isCompleted: !task.isCompleted) { [weak self] error in
+            if let error {
+                Logger.taskList.error("Failed to change completion for task: \(error)")
+                self?.presenter.didFail(with: error)
+            } else {
+                Logger.taskList.info("Successfully changed completion for task: \(task.id)")
+                task.isCompleted.toggle()
+                self?.presenter.didCompleteTask(task)
             }
         }
     }
@@ -63,11 +77,11 @@ extension TaskListInteractor {
                     saveTasksToStorage(taskDTOs: taskDTOs)
                 } catch {
                     Logger.taskList.error("Failed to decode tasks: \(error)")
-                    presenter.didFailToReceiveTasks(with: error)
+                    presenter.didFail(with: error)
                 }
             case .failure(let error):
                 Logger.taskList.error("Failed to fetch tasks from network: \(error)")
-                presenter.didFailToReceiveTasks(with: error)
+                presenter.didFail(with: error)
             }
         }
     }
@@ -81,7 +95,7 @@ extension TaskListInteractor {
                 presenter.didReceiveTaskEntities(entities)
             case .failure(let error):
                 Logger.taskList.error("Failed to fetch tasks from storage: \(error)")
-                presenter.didFailToReceiveTasks(with: error)
+                presenter.didFail(with: error)
             }
         }
     }
@@ -94,7 +108,7 @@ extension TaskListInteractor {
         taskStorageService.create(tasks: tasks) { [weak presenter] error in
             if let error {
                 Logger.taskList.error("Failed to create tasks in storage: \(error)")
-                presenter?.didFailToReceiveTasks(with: error)
+                presenter?.didFail(with: error)
             } else {
                 Logger.taskList.info("Successfully created tasks in storage.")
                 presenter?.didReceiveTasks(tasks)

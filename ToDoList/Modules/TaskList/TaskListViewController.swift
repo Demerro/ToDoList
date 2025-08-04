@@ -12,12 +12,30 @@ protocol TaskListViewToPresenterProtocol: AnyObject {
     func showEditTask(for task: Task)
     func deleteTask(_ task: Task)
     func shareTask(_ task: Task)
+    func completeTask(_ task: Task)
 }
 
 final class TaskListViewController: UIViewController {
     
-    private let collectionView: UICollectionView = {
-        let layoutConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
+    private lazy var collectionView: UICollectionView = {
+        var layoutConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
+        layoutConfiguration.leadingSwipeActionsConfigurationProvider = { indexPath in
+            let completeAction = UIContextualAction(style: .normal, title: nil) { [unowned self] _, _, completion in
+                let task = tasks[indexPath.item]
+                presenter.completeTask(task)
+                completion(true)
+            }
+            completeAction.image = UIImage(systemName: "checkmark")!
+            completeAction.backgroundColor = .systemYellow
+            return UISwipeActionsConfiguration(actions: [completeAction])
+        }
+        layoutConfiguration.trailingSwipeActionsConfigurationProvider = { indexPath in
+            let deleteAction = UIContextualAction(style: .destructive, title: nil) { [unowned self] _, _, _ in
+                presenter.deleteTask(tasks[indexPath.item])
+            }
+            deleteAction.image = UIImage(systemName: "trash")
+            return UISwipeActionsConfiguration(actions: [deleteAction])
+        }
         let layout = UICollectionViewCompositionalLayout.list(using: layoutConfiguration)
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
