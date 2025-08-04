@@ -30,6 +30,7 @@ final class EditTaskViewController: UIViewController {
         self.presenter = presenter
         super.init(nibName: nil, bundle: nil)
         title = task.title
+        textView.text = task.description
     }
     
     @available(*, unavailable)

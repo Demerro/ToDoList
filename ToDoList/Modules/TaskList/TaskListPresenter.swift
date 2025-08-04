@@ -49,7 +49,7 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     
     func didReceiveTaskEntities(_ entities: [TaskEntity]) {
         let tasks = entities.map {
-            Task(id: $0.id, title: $0.title, isCompleted: $0.isCompleted, date: $0.date)
+            Task(id: $0.id, title: $0.title, isCompleted: $0.isCompleted, date: $0.date, description: $0.taskDescription)
         }
         DispatchQueue.main.async {
             self.view?.displayTasks(tasks)
