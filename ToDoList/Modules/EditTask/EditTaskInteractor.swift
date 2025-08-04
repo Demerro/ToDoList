@@ -9,7 +9,7 @@ import Foundation
 import os.log
 
 protocol EditTaskInteractorToPresenterProtocol: AnyObject {
-    
+    func didUpdateTask()
     func didFailToUpdateTask(with error: Error)
 }
 
@@ -33,6 +33,7 @@ extension EditTaskInteractor: EditTaskPresenterToInteractorProtocol {
                 presenter?.didFailToUpdateTask(with: error)
             } else {
                 Logger.editTask.info("Task updated successfully: \(task.id)")
+                presenter?.didUpdateTask()
             }
         }
     }

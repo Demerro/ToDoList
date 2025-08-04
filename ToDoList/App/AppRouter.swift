@@ -10,7 +10,7 @@ import UIKit
 protocol AppRouterProtocol: AnyObject {
     func showErrorAlert(title: String, message: String)
     func showTaskList()
-    func showEditTask(task: Task)
+    func showEditTask(task: Task, delegate: EditTaskModuleDelegate?)
 }
 
 final class AppRouter {
@@ -36,8 +36,8 @@ extension AppRouter: AppRouterProtocol {
         navigationController.setViewControllers([module], animated: false)
     }
     
-    func showEditTask(task: Task) {
-        let module = EditTaskModuleBuilder.build(task: task, appRouter: self, taskStorageService: dependencies.taskStorageService)
+    func showEditTask(task: Task, delegate: EditTaskModuleDelegate?) {
+        let module = EditTaskModuleBuilder.build(task: task, appRouter: self, taskStorageService: dependencies.taskStorageService, delegate: delegate)
         navigationController.pushViewController(module, animated: true)
     }
 }

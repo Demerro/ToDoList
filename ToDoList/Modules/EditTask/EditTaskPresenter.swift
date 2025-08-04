@@ -20,6 +20,7 @@ final class EditTaskPresenter {
     private var saveWorkItem: DispatchWorkItem? = nil
 
     var interactor: EditTaskPresenterToInteractorProtocol? = nil
+    weak var delegate: EditTaskModuleDelegate? = nil
     
     private var task: Task
     let router: AppRouterProtocol
@@ -45,6 +46,10 @@ extension EditTaskPresenter: EditTaskViewToPresenterProtocol {
 }
 
 extension EditTaskPresenter: EditTaskInteractorToPresenterProtocol {
+    
+    func didUpdateTask() {
+        delegate?.editTaskModule(didUpdate: task)
+    }
     
     func didFailToUpdateTask(with error: any Error) {
         router.showErrorAlert(title: "Oops! An error occurred.", message: error.localizedDescription)

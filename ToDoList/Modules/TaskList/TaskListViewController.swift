@@ -98,6 +98,13 @@ extension TaskListViewController: TaskListPresenterToViewProtocol {
         self.tasks = tasks
         setupSnapshot(for: tasks.map(\.id))
     }
+    
+    func reconfigureTask(_ task: Task) {
+        var snapshot = dataSource.snapshot()
+        tasks[snapshot.indexOfItem(task.id)!] = task
+        snapshot.reconfigureItems([task.id])
+        dataSource.apply(snapshot)
+    }
 }
 
 extension TaskListViewController: UICollectionViewDelegate {

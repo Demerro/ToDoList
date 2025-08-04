@@ -9,6 +9,7 @@ import Foundation
 
 protocol TaskListPresenterToViewProtocol: AnyObject {
     func displayTasks(_ tasks: [Task])
+    func reconfigureTask(_ task: Task)
 }
 
 protocol TaskListPresenterToInteractorProtocol: AnyObject {
@@ -34,7 +35,7 @@ extension TaskListPresenter: TaskListViewToPresenterProtocol {
     }
     
     func showEditTask(for task: Task) {
-        router.showEditTask(task: task)
+        router.showEditTask(task: task, delegate: self)
     }
 }
 
@@ -58,6 +59,15 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     func didFailToReceiveTasks(with error: any Error) {
         DispatchQueue.main.async {
             self.router.showErrorAlert(title: "Oops! An error occurred.", message: error.localizedDescription)
+        }
+    }
+}
+
+extension TaskListPresenter: EditTaskModuleDelegate {
+    
+    func editTaskModule(didUpdate task: Task) {
+        DispatchQueue.main.async {
+            self.view?.reconfigureTask(task)
         }
     }
 }
