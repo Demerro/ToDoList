@@ -19,3 +19,14 @@ final class TaskEntity: NSManagedObject {
         NSFetchRequest<TaskEntity>(entityName: "TaskEntity")
     }
 }
+
+extension TaskEntity {
+    
+    enum Key: String {
+        case id
+        case title
+        case taskDescription
+        case date
+        case isCompleted
+    }
+}

@@ -43,6 +43,36 @@ extension TaskStorageService {
             }
         }
     }
+    
+    func create(tasks: [Task], completion: ((Error?) -> Void)? = nil) {
+        guard !tasks.isEmpty else {
+            completion?(nil)
+            return
+        }
+        let context = coreDataStack.makeBackgroundContext()
+        context.perform { [weak self] in
+            guard let coreDataStack = self?.coreDataStack else { return }
+            let dictionaries: [[String: Any]] = tasks.map { task in
+                [
+                    TaskEntity.Key.id.rawValue: task.id,
+                    TaskEntity.Key.title.rawValue: task.title,
+                    TaskEntity.Key.taskDescription.rawValue: task.description as Any,
+                    TaskEntity.Key.date.rawValue: task.date,
+                    TaskEntity.Key.isCompleted.rawValue: task.isCompleted
+                ]
+            }
+            let batchInsertRequest = NSBatchInsertRequest(entity: TaskEntity.entity(), objects: dictionaries)
+            do {
+                try context.execute(batchInsertRequest)
+                try coreDataStack.save(context: context)
+                Logger.storage.info("Tasks created successfully.")
+                completion?(nil)
+            } catch {
+                Logger.storage.error("Failed to create tasks: \(error)")
+                completion?(Error.failedToCreateTask(error: error))
+            }
+        }
+    }
 }
 
 extension TaskStorageService {

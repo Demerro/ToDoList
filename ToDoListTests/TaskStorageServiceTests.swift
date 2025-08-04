@@ -101,6 +101,97 @@ extension TaskStorageServiceTests {
         
         wait(for: createExpectations + [fetchExpectation], timeout: 1.0)
     }
+    
+    func testCreateTasksArray() {
+        // Given
+        let tasks = [
+            Task(
+                id: 1,
+                title: "Task 1",
+                isCompleted: false,
+                date: Date(),
+                description: "Description 1"
+            ),
+            Task(
+                id: 2,
+                title: "Task 2",
+                isCompleted: true,
+                date: Date().addingTimeInterval(-3600),
+                description: "Description 2"
+            ),
+            Task(
+                id: 3,
+                title: "Task 3",
+                isCompleted: false,
+                date: Date().addingTimeInterval(3600),
+                description: "Description 3"
+            )
+        ]
+        
+        // When
+        let createExpectation = XCTestExpectation(description: "Tasks array created")
+        sut.create(tasks: tasks) { error in
+            XCTAssertNil(error)
+            createExpectation.fulfill()
+        }
+        
+        // Then
+        let fetchExpectation = XCTestExpectation(description: "Tasks array fetched")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.sut.getAllTasks { result in
+                switch result {
+                case .success(let fetchedTasks):
+                    XCTAssertEqual(fetchedTasks.count, tasks.count)
+                    
+                    // Verify each task was created correctly
+                    for task in tasks {
+                        let matchingTask = fetchedTasks.first { $0.id == task.id }
+                        XCTAssertNotNil(matchingTask, "Task with id \(task.id) should exist")
+                        if let matchingTask = matchingTask {
+                            XCTAssertEqual(matchingTask.title, task.title)
+                            XCTAssertEqual(matchingTask.taskDescription, task.description)
+                            XCTAssertEqual(matchingTask.isCompleted, task.isCompleted)
+                        }
+                    }
+                case .failure:
+                    XCTFail("Failed to fetch tasks")
+                }
+                fetchExpectation.fulfill()
+            }
+        }
+        
+        wait(for: [createExpectation, fetchExpectation], timeout: 1.0)
+    }
+    
+    func testCreateEmptyTasksArray() {
+        // Given
+        let emptyTasks: [Task] = []
+        
+        // When
+        let createExpectation = XCTestExpectation(description: "Empty tasks array created")
+        sut.create(tasks: emptyTasks) { error in
+            XCTAssertNil(error)
+            createExpectation.fulfill()
+        }
+        
+        // Then
+        let fetchExpectation = XCTestExpectation(description: "Tasks fetched after empty array creation")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.sut.getAllTasks { result in
+                switch result {
+                case .success(let tasks):
+                    XCTAssertTrue(tasks.isEmpty)
+                case .failure:
+                    XCTFail("Failed to fetch tasks")
+                }
+                fetchExpectation.fulfill()
+            }
+        }
+        
+        wait(for: [createExpectation, fetchExpectation], timeout: 1.0)
+    }
 }
 
 // MARK: - Read Tests
