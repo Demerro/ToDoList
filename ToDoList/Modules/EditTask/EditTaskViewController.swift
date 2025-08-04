@@ -22,12 +22,12 @@ final class EditTaskViewController: UIViewController {
         return textView
     }()
     
-    weak var presenter: EditTaskViewToPresenterProtocol? = nil
-    
     let task: Task
+    let presenter: EditTaskViewToPresenterProtocol
     
-    init(task: Task) {
+    init(task: Task, presenter: EditTaskViewToPresenterProtocol) {
         self.task = task
+        self.presenter = presenter
         super.init(nibName: nil, bundle: nil)
         title = task.title
     }
@@ -55,6 +55,6 @@ final class EditTaskViewController: UIViewController {
 extension EditTaskViewController: UITextViewDelegate {
     
     func textViewDidChange(_ textView: UITextView) {
-        presenter?.textViewDidChange(text: textView.text)
+        presenter.textViewDidChange(text: textView.text)
     }
 }

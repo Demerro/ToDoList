@@ -15,11 +15,11 @@ protocol EditTaskInteractorToPresenterProtocol: AnyObject {
 
 final class EditTaskInteractor {
     
-    var presenter: EditTaskInteractorToPresenterProtocol? = nil
-    
+    unowned let presenter: EditTaskInteractorToPresenterProtocol
     let taskStorageService: TaskStorageService
     
-    init(taskStorageService: TaskStorageService) {
+    init(presenter: EditTaskInteractorToPresenterProtocol, taskStorageService: TaskStorageService) {
+        self.presenter = presenter
         self.taskStorageService = taskStorageService
     }
 }
