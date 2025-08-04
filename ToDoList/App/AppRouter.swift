@@ -37,7 +37,7 @@ extension AppRouter: AppRouterProtocol {
     }
     
     func showEditTask(task: Task) {
-        let module = EditTaskModuleBuilder.build(task: task, taskStorageService: dependencies.taskStorageService)
+        let module = EditTaskModuleBuilder.build(task: task, appRouter: self, taskStorageService: dependencies.taskStorageService)
         navigationController.pushViewController(module, animated: true)
     }
 }

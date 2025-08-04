@@ -21,9 +21,11 @@ final class EditTaskPresenter {
     
     private var task: Task
     let interactor: EditTaskPresenterToInteractorProtocol
+    let router: AppRouterProtocol
     
-    init(task: Task, interactor: EditTaskPresenterToInteractorProtocol) {
+    init(task: Task, router: AppRouterProtocol, interactor: EditTaskPresenterToInteractorProtocol) {
         self.task = task
+        self.router = router
         self.interactor = interactor
     }
 }
@@ -43,4 +45,8 @@ extension EditTaskPresenter: EditTaskViewToPresenterProtocol {
 }
 
 extension EditTaskPresenter: EditTaskInteractorToPresenterProtocol {
+    
+    func didFailToUpdateTask(with error: any Error) {
+        router.showErrorAlert(title: "Oops! An error occurred.", message: error.localizedDescription)
+    }
 }

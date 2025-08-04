@@ -9,6 +9,8 @@ import Foundation
 import os.log
 
 protocol EditTaskInteractorToPresenterProtocol: AnyObject {
+    
+    func didFailToUpdateTask(with error: Error)
 }
 
 final class EditTaskInteractor {
@@ -25,9 +27,10 @@ final class EditTaskInteractor {
 extension EditTaskInteractor: EditTaskPresenterToInteractorProtocol {
     
     func saveTask(_ task: Task) {
-        taskStorageService.update(id: task.id, taskDescription: task.description) { error in
+        taskStorageService.update(id: task.id, taskDescription: task.description) { [weak presenter] error in
             if let error {
                 Logger.editTask.error("Failed to update task: \(error)")
+                presenter?.didFailToUpdateTask(with: error)
             } else {
                 Logger.editTask.info("Task updated successfully: \(task.id)")
             }

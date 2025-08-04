@@ -9,10 +9,10 @@ import UIKit
 
 struct EditTaskModuleBuilder {
     
-    static func build(task: Task, taskStorageService: TaskStorageService) -> UIViewController {
+    static func build(task: Task, appRouter: AppRouterProtocol, taskStorageService: TaskStorageService) -> UIViewController {
         let view = EditTaskViewController(task: task)
         let interactor = EditTaskInteractor(taskStorageService: taskStorageService)
-        let presenter = EditTaskPresenter(task: task, interactor: interactor)
+        let presenter = EditTaskPresenter(task: task, router: appRouter, interactor: interactor)
         
         view.presenter = presenter
         interactor.presenter = presenter
