@@ -125,10 +125,14 @@ extension TaskListViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
         UIContextMenuConfiguration(actionProvider: { _ in
             let actions = [
-                UIAction(title: "Редактировать", image: UIImage(systemName: "square.and.pencil")!, handler: { _ in }),
+                UIAction(title: "Редактировать", image: UIImage(systemName: "square.and.pencil")!, handler: { [unowned self] _ in
+                    if let indexPath = indexPaths.first {
+                        presenter.showEditTask(for: tasks[indexPath.item])
+                    }
+                }),
                 UIAction(title: "Поделиться", image: UIImage(systemName: "square.and.arrow.up")!, handler: { _ in }),
                 UIAction(title: "Удалить", image: UIImage(systemName: "trash")!, attributes: .destructive, handler: { [unowned self] _ in
-                    for indexPath in indexPaths {
+                    if let indexPath = indexPaths.first {
                         presenter.deleteTask(tasks[indexPath.item])
                     }
                 }),
