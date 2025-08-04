@@ -17,21 +17,20 @@ protocol TaskListPresenterToInteractorProtocol: AnyObject {
 
 final class TaskListPresenter {
     
-    let router: AppRouterProtocol
-    let view: TaskListPresenterToViewProtocol
-    let interactor: TaskListPresenterToInteractorProtocol
+    var interactor: TaskListPresenterToInteractorProtocol? = nil
+    var view: TaskListPresenterToViewProtocol? = nil
     
-    init(router: AppRouterProtocol, view: TaskListPresenterToViewProtocol, interactor: TaskListPresenterToInteractorProtocol) {
+    let router: AppRouterProtocol
+    
+    init(router: AppRouterProtocol) {
         self.router = router
-        self.view = view
-        self.interactor = interactor
     }
 }
 
 extension TaskListPresenter: TaskListViewToPresenterProtocol {
     
     func getTasks() {
-        interactor.getTasks()
+        interactor?.getTasks()
     }
     
     func showEditTask(for task: Task) {
@@ -43,7 +42,7 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     
     func didReceiveTasks(_ tasks: [Task]) {
         DispatchQueue.main.async {
-            self.view.displayTasks(tasks)
+            self.view?.displayTasks(tasks)
         }
     }
     
@@ -52,7 +51,7 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
             Task(id: $0.id, title: $0.title, isCompleted: $0.isCompleted, date: $0.date)
         }
         DispatchQueue.main.async {
-            self.view.displayTasks(tasks)
+            self.view?.displayTasks(tasks)
         }
     }
     

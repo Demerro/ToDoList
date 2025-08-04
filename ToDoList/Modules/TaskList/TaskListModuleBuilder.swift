@@ -10,12 +10,12 @@ import UIKit
 struct TaskListModuleBuilder {
     
     static func build(appRouter: AppRouterProtocol, networkService: NetworkService, taskStorageService: TaskStorageService) -> UIViewController {
-        let view = TaskListViewController()
-        let interactor = TaskListInteractor(networkService: networkService, taskStorageService: taskStorageService)
-        let presenter = TaskListPresenter(router: appRouter, view: view, interactor: interactor)
+        let presenter = TaskListPresenter(router: appRouter)
+        let view = TaskListViewController(presenter: presenter)
+        let interactor = TaskListInteractor(presenter: presenter, networkService: networkService, taskStorageService: taskStorageService)
         
-        view.presenter = presenter
-        interactor.presenter = presenter
+        presenter.interactor = interactor
+        presenter.view = view
         
         return view
     }

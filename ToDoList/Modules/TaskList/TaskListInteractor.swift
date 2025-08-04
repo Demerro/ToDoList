@@ -19,12 +19,12 @@ final class TaskListInteractor {
     private static let todosURL = URL(string: "https://dummyjson.com/todos")!
     private lazy var jsonDecoder = JSONDecoder()
     
-    var presenter: TaskListInteractorToPresenterProtocol? = nil
-    
+    unowned let presenter: TaskListInteractorToPresenterProtocol
     let networkService: NetworkService
     let taskStorageService: TaskStorageService
     
-    init(networkService: NetworkService, taskStorageService: TaskStorageService) {
+    init(presenter: TaskListInteractorToPresenterProtocol, networkService: NetworkService, taskStorageService: TaskStorageService) {
+        self.presenter = presenter
         self.networkService = networkService
         self.taskStorageService = taskStorageService
     }
@@ -41,7 +41,7 @@ extension TaskListInteractor {
     
     private func getTasksFromNetwork() {
         networkService.data(for: URLRequest(url: Self.todosURL)) { [weak self] result in
-            guard let self, let presenter else { return }
+            guard let self else { return }
             switch result {
             case .success(let data):
                 do {

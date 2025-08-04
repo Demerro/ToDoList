@@ -36,7 +36,17 @@ final class TaskListViewController: UIViewController {
     
     private lazy var dataSource = makeDiffableDataSource()
     
-    weak var presenter: TaskListViewToPresenterProtocol? = nil
+    let presenter: TaskListViewToPresenterProtocol
+    
+    init(presenter: TaskListViewToPresenterProtocol) {
+        self.presenter = presenter
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
     
     override func loadView() {
         view = collectionView
@@ -49,7 +59,7 @@ final class TaskListViewController: UIViewController {
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
-        presenter?.getTasks()
+        presenter.getTasks()
     }
 }
 
@@ -94,7 +104,7 @@ extension TaskListViewController: UICollectionViewDelegate {
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         collectionView.deselectItem(at: indexPath, animated: false)
-        presenter?.showEditTask(for: tasks[indexPath.item])
+        presenter.showEditTask(for: tasks[indexPath.item])
     }
     
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
