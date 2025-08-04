@@ -133,7 +133,7 @@ extension TaskStorageService {
             guard let self else { return }
             do {
                 guard let taskEntity = try backgroundContext.fetch(Self.makeFetchRequest(id: id)).first else {
-                    Logger.storage.error("Task with UUID \(id) not found for update.")
+                    Logger.storage.error("Task with ID \(id) not found for update.")
                     completion(Error.taskNotFound(id: id))
                     return
                 }
