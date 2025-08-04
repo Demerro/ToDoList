@@ -10,10 +10,12 @@ import Foundation
 protocol TaskListPresenterToViewProtocol: AnyObject {
     func displayTasks(_ tasks: [Task])
     func reconfigureTask(_ task: Task)
+    func deleteTask(with id: Int)
 }
 
 protocol TaskListPresenterToInteractorProtocol: AnyObject {
     func getTasks()
+    func deleteTask(_ task: Task)
 }
 
 final class TaskListPresenter {
@@ -37,6 +39,10 @@ extension TaskListPresenter: TaskListViewToPresenterProtocol {
     func showEditTask(for task: Task) {
         router.showEditTask(task: task, delegate: self)
     }
+    
+    func deleteTask(_ task: Task) {
+        interactor?.deleteTask(task)
+    }
 }
 
 extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
@@ -59,6 +65,12 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     func didFailToReceiveTasks(with error: any Error) {
         DispatchQueue.main.async {
             self.router.showErrorAlert(title: "Oops! An error occurred.", message: error.localizedDescription)
+        }
+    }
+    
+    func didDeleteTask(with id: Int) {
+        DispatchQueue.main.async {
+            self.view?.deleteTask(with: id)
         }
     }
 }

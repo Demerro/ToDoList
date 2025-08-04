@@ -12,6 +12,7 @@ protocol TaskListInteractorToPresenterProtocol: AnyObject {
     func didReceiveTasks(_ tasks: [Task])
     func didReceiveTaskEntities(_ entities: [TaskEntity])
     func didFailToReceiveTasks(with error: Error)
+    func didDeleteTask(with id: Int)
 }
 
 final class TaskListInteractor {
@@ -34,6 +35,18 @@ extension TaskListInteractor: TaskListPresenterToInteractorProtocol {
     
     func getTasks() {
         UserDefaults.standard.hasLaunchedBefore ? getTasksFromStorage() : getTasksFromNetwork()
+    }
+    
+    func deleteTask(_ task: Task) {
+        taskStorageService.delete(id: task.id) { [weak self] error in
+            if let error {
+                Logger.taskList.error("Failed to delete task: \(error)")
+                self?.presenter.didFailToReceiveTasks(with: error)
+            } else {
+                Logger.taskList.info("Successfully deleted task: \(task.id)")
+                self?.presenter.didDeleteTask(with: task.id)
+            }
+        }
     }
 }
 
