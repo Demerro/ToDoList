@@ -13,6 +13,7 @@ protocol TaskListViewToPresenterProtocol: AnyObject {
     func deleteTask(_ task: Task)
     func shareTask(_ task: Task)
     func completeTask(_ task: Task)
+    func createTask()
 }
 
 final class TaskListViewController: UIViewController {
@@ -33,7 +34,7 @@ final class TaskListViewController: UIViewController {
             let deleteAction = UIContextualAction(style: .destructive, title: nil) { [unowned self] _, _, _ in
                 presenter.deleteTask(tasks[indexPath.item])
             }
-            deleteAction.image = UIImage(systemName: "trash")
+            deleteAction.image = UIImage(systemName: "trash")!
             return UISwipeActionsConfiguration(actions: [deleteAction])
         }
         let layout = UICollectionViewCompositionalLayout.list(using: layoutConfiguration)
@@ -41,6 +42,13 @@ final class TaskListViewController: UIViewController {
         collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         collectionView.showsHorizontalScrollIndicator = false
         return collectionView
+    }()
+    
+    private let bottomLabel: UILabel = {
+        let label = UILabel(frame: .zero)
+        label.font = .preferredFont(forTextStyle: .caption1)
+        label.text = "Загрузка..."
+        return label
     }()
     
     private let dateFormatter: DateFormatter = {
@@ -75,10 +83,22 @@ final class TaskListViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Задачи"
+        
         collectionView.delegate = self
+        
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
+        
+        toolbarItems = [
+            .flexibleSpace(),
+            UIBarButtonItem(customView: bottomLabel),
+            .flexibleSpace(),
+            UIBarButtonItem(image: UIImage(systemName: "square.and.pencil")!, primaryAction: UIAction { [unowned presenter] _ in
+                presenter.createTask()
+            })
+        ]
+        
         presenter.getTasks()
     }
 }
@@ -104,11 +124,12 @@ extension TaskListViewController {
         }
     }
     
-    private func setupSnapshot(for items: [Int]) {
+    private func setupSnapshot(for items: [UUID]) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
         snapshot.appendSections([.main])
         snapshot.appendItems(items, toSection: .main)
         dataSource.apply(snapshot)
+        bottomLabel.text = "\(tasks.count) задач"
     }
 }
 
@@ -126,11 +147,14 @@ extension TaskListViewController: TaskListPresenterToViewProtocol {
         dataSource.apply(snapshot)
     }
     
-    func deleteTask(with id: Int) {
+    func deleteTask(with id: UUID) {
         tasks.removeAll { $0.id == id }
-        var snapshot = dataSource.snapshot()
-        snapshot.deleteItems([id])
-        dataSource.apply(snapshot)
+        setupSnapshot(for: tasks.map(\.id))
+    }
+    
+    func createTask(_ task: Task) {
+        tasks.insert(task, at: 0)
+        setupSnapshot(for: tasks.map(\.id))
     }
 }
 
@@ -180,5 +204,5 @@ extension TaskListViewController {
         case main
     }
     
-    private typealias Item = Int
+    private typealias Item = UUID
 }

@@ -8,7 +8,7 @@
 import Foundation
 
 struct Task: Identifiable {
-    let id: Int
+    let id: UUID
     let title: String
     var isCompleted: Bool
     let date: Date

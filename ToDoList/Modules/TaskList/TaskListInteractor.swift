@@ -12,8 +12,9 @@ protocol TaskListInteractorToPresenterProtocol: AnyObject {
     func didReceiveTasks(_ tasks: [Task])
     func didReceiveTaskEntities(_ entities: [TaskEntity])
     func didFail(with error: Error)
-    func didDeleteTask(with id: Int)
+    func didDeleteTask(with id: UUID)
     func didCompleteTask(_ task: Task)
+    func didCreateTask(_ task: Task)
 }
 
 final class TaskListInteractor {
@@ -62,6 +63,19 @@ extension TaskListInteractor: TaskListPresenterToInteractorProtocol {
             }
         }
     }
+    
+    func createTask(with title: String) {
+        let task = Task(id: UUID(), title: title, isCompleted: false, date: Date())
+        taskStorageService.create(task: task) { [weak self] error in
+            if let error {
+                Logger.taskList.error("Failed to create task: \(error)")
+                self?.presenter.didFail(with: error)
+            } else {
+                Logger.taskList.info("Successfully created task: \(task.id)")
+                self?.presenter.didCreateTask(task)
+            }
+        }
+    }
 }
 
 extension TaskListInteractor {
@@ -104,7 +118,7 @@ extension TaskListInteractor {
 extension TaskListInteractor {
     
     private func saveTasksToStorage(taskDTOs: [TaskDTO]) {
-        let tasks = taskDTOs.map { Task(id: $0.id, title: $0.todo, isCompleted: $0.completed, date: Date()) }
+        let tasks = taskDTOs.map { Task(id: UUID(), title: $0.todo, isCompleted: $0.completed, date: Date()) }
         taskStorageService.create(tasks: tasks) { [weak presenter] error in
             if let error {
                 Logger.taskList.error("Failed to create tasks in storage: \(error)")

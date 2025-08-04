@@ -10,13 +10,15 @@ import Foundation
 protocol TaskListPresenterToViewProtocol: AnyObject {
     func displayTasks(_ tasks: [Task])
     func reconfigureTask(_ task: Task)
-    func deleteTask(with id: Int)
+    func deleteTask(with id: UUID)
+    func createTask(_ task: Task)
 }
 
 protocol TaskListPresenterToInteractorProtocol: AnyObject {
     func getTasks()
     func deleteTask(_ task: Task)
     func completeTask(_ task: Task)
+    func createTask(with title: String)
 }
 
 final class TaskListPresenter {
@@ -52,6 +54,17 @@ extension TaskListPresenter: TaskListViewToPresenterProtocol {
     func completeTask(_ task: Task) {
         interactor?.completeTask(task)
     }
+    
+    func createTask() {
+        router.showTextFieldAlert(
+            title: "Введите название задачи",
+            destructiveActionTitle: "Отмена",
+            defaultActionTitle: "Добавить",
+            errorTitle: "Ошибка",
+            errorMessage: "Название задачи не может быть пустым.") { [weak interactor] title in
+                interactor?.createTask(with: title)
+            }
+    }
 }
 
 extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
@@ -73,11 +86,11 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     
     func didFail(with error: any Error) {
         DispatchQueue.main.async {
-            self.router.showErrorAlert(title: "Oops! An error occurred.", message: error.localizedDescription)
+            self.router.showErrorAlert(title: "Произошла ошибка!", message: error.localizedDescription)
         }
     }
     
-    func didDeleteTask(with id: Int) {
+    func didDeleteTask(with id: UUID) {
         DispatchQueue.main.async {
             self.view?.deleteTask(with: id)
         }
@@ -86,6 +99,12 @@ extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     func didCompleteTask(_ task: Task) {
         DispatchQueue.main.async {
             self.view?.reconfigureTask(task)
+        }
+    }
+    
+    func didCreateTask(_ task: Task) {
+        DispatchQueue.main.async {
+            self.view?.createTask(task)
         }
     }
 }

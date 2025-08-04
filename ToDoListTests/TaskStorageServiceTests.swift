@@ -21,13 +21,13 @@ final class TaskStorageServiceTests: XCTestCase {
     }
 }
 
-// MARK: - Create Tests
+// MARK: - Create Operation Tests
 extension TaskStorageServiceTests {
     
-    func testCreateTask() {
+    func testCreateSingleTask() {
         // Given
         let task = Task(
-            id: 1,
+            id: UUID(),
             title: "Test Task",
             isCompleted: false,
             date: Date(),
@@ -72,7 +72,7 @@ extension TaskStorageServiceTests {
         // When
         for i in 0..<tasksCount {
             let task = Task(
-                id: i + 1,
+                id: UUID(),
                 title: "Task \(i)",
                 isCompleted: false,
                 date: Date(),
@@ -101,26 +101,30 @@ extension TaskStorageServiceTests {
         
         wait(for: createExpectations + [fetchExpectation], timeout: 1.0)
     }
+}
+
+// MARK: - Batch Create Operation Tests
+extension TaskStorageServiceTests {
     
     func testCreateTasksArray() {
         // Given
         let tasks = [
             Task(
-                id: 1,
+                id: UUID(),
                 title: "Task 1",
                 isCompleted: false,
                 date: Date(),
                 description: "Description 1"
             ),
             Task(
-                id: 2,
+                id: UUID(),
                 title: "Task 2",
                 isCompleted: true,
                 date: Date().addingTimeInterval(-3600),
                 description: "Description 2"
             ),
             Task(
-                id: 3,
+                id: UUID(),
                 title: "Task 3",
                 isCompleted: false,
                 date: Date().addingTimeInterval(3600),
@@ -194,7 +198,7 @@ extension TaskStorageServiceTests {
     }
 }
 
-// MARK: - Read Tests
+// MARK: - Read Operation Tests
 extension TaskStorageServiceTests {
     
     func testGetAllTasksEmpty() {
@@ -222,7 +226,7 @@ extension TaskStorageServiceTests {
         let laterDate = Date()
         
         let earlierTask = Task(
-            id: 1,
+            id: UUID(),
             title: "Earlier Task",
             isCompleted: false,
             date: earlierDate,
@@ -230,7 +234,7 @@ extension TaskStorageServiceTests {
         )
         
         let laterTask = Task(
-            id: 2,
+            id: UUID(),
             title: "Later Task",
             isCompleted: false,
             date: laterDate,
@@ -274,14 +278,14 @@ extension TaskStorageServiceTests {
     }
 }
 
-// MARK: - Update Tests
+// MARK: - Update Operation Tests
 extension TaskStorageServiceTests {
     
     func testUpdateTaskTitle() {
         // Given
         let originalTitle = "Original Title"
         let newTitle = "Updated Title"
-        let taskId = 1
+        let taskId = UUID()
         
         let task = Task(
             id: taskId,
@@ -324,29 +328,9 @@ extension TaskStorageServiceTests {
         wait(for: [createExpectation, updateExpectation], timeout: 2.0)
     }
     
-    func testUpdateNonExistentTask() {
-        // Given
-        let nonExistentId = 999
-        
-        // When & Then
-        let expectation = XCTestExpectation(description: "Update non-existent task")
-        
-        sut.update(id: nonExistentId, title: "New Title") { error in
-            XCTAssertNotNil(error)
-            if let error = error, case let TaskStorageService.Error.taskNotFound(id) = error {
-                XCTAssertEqual(id, nonExistentId)
-            } else {
-                XCTFail("Expected taskNotFound error")
-            }
-            expectation.fulfill()
-        }
-        
-        wait(for: [expectation], timeout: 1.0)
-    }
-    
     func testUpdateTaskDescription() {
         // Given
-        let taskId = 1
+        let taskId = UUID()
         let newDescription = "Updated Description"
         
         let task = Task(
@@ -390,7 +374,7 @@ extension TaskStorageServiceTests {
     
     func testUpdateTaskCompletion() {
         // Given
-        let taskId = 1
+        let taskId = UUID()
         
         let task = Task(
             id: taskId,
@@ -430,14 +414,34 @@ extension TaskStorageServiceTests {
         
         wait(for: [createExpectation, updateExpectation], timeout: 2.0)
     }
+    
+    func testUpdateNonExistentTask() {
+        // Given
+        let nonExistentId = UUID()
+        
+        // When & Then
+        let expectation = XCTestExpectation(description: "Update non-existent task")
+        
+        sut.update(id: nonExistentId, title: "New Title") { error in
+            XCTAssertNotNil(error)
+            if let error = error, case let TaskStorageService.Error.taskNotFound(id) = error {
+                XCTAssertEqual(id, nonExistentId)
+            } else {
+                XCTFail("Expected taskNotFound error")
+            }
+            expectation.fulfill()
+        }
+        
+        wait(for: [expectation], timeout: 1.0)
+    }
 }
 
-// MARK: - Delete Tests
+// MARK: - Delete Operation Tests
 extension TaskStorageServiceTests {
     
     func testDeleteExistingTask() {
         // Given
-        let taskId = 1
+        let taskId = UUID()
         let task = Task(
             id: taskId,
             title: "Task to Delete",
@@ -479,7 +483,7 @@ extension TaskStorageServiceTests {
     
     func testDeleteNonExistentTask() {
         // Given
-        let nonExistentId = 999
+        let nonExistentId = UUID()
         
         // When & Then
         let expectation = XCTestExpectation(description: "Delete non-existent task")

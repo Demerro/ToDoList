@@ -12,6 +12,14 @@ protocol AppRouterProtocol: AnyObject {
     func showTaskList()
     func showEditTask(task: Task, delegate: EditTaskModuleDelegate?)
     func showActivityViewController(for task: Task)
+    func showTextFieldAlert(
+        title: String,
+        destructiveActionTitle: String,
+        defaultActionTitle: String,
+        errorTitle: String,
+        errorMessage: String,
+        completion: @escaping (String) -> Void
+    )
 }
 
 final class AppRouter {
@@ -22,6 +30,7 @@ final class AppRouter {
     init(dependencies: AppDependencyContainer) {
         self.dependencies = dependencies
         navigationController.navigationBar.prefersLargeTitles = true
+        navigationController.isToolbarHidden = false
     }
 }
 
@@ -29,6 +38,7 @@ extension AppRouter: AppRouterProtocol {
     
     func showErrorAlert(title: String, message: String) {
         let alertViewController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertViewController.addAction(UIAlertAction(title: "OK", style: .default))
         navigationController.present(alertViewController, animated: true)
     }
     
@@ -49,5 +59,26 @@ extension AppRouter: AppRouterProtocol {
         }
         let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
         navigationController.present(activityViewController, animated: true)
+    }
+    
+    func showTextFieldAlert(
+        title: String,
+        destructiveActionTitle: String,
+        defaultActionTitle: String,
+        errorTitle: String,
+        errorMessage: String,
+        completion: @escaping (String) -> Void
+    ) {
+        let alertController = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+        alertController.addTextField()
+        alertController.addAction(UIAlertAction(title: destructiveActionTitle, style: .destructive))
+        alertController.addAction(UIAlertAction(title: defaultActionTitle, style: .default, handler: { [unowned self] _ in
+            if let text = alertController.textFields?.first?.text, !text.isEmpty {
+                completion(text)
+            } else {
+                showErrorAlert(title: errorTitle, message: destructiveActionTitle)
+            }
+        }))
+        navigationController.present(alertController, animated: true)
     }
 }
