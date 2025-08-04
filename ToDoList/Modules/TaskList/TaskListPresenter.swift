@@ -33,6 +33,10 @@ extension TaskListPresenter: TaskListViewToPresenterProtocol {
     func getTasks() {
         interactor.getTasks()
     }
+    
+    func showEditTask(for task: Task) {
+        router.showEditTask(task: task)
+    }
 }
 
 extension TaskListPresenter: TaskListInteractorToPresenterProtocol {

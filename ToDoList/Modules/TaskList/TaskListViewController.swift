@@ -9,6 +9,7 @@ import UIKit
 
 protocol TaskListViewToPresenterProtocol: AnyObject {
     func getTasks()
+    func showEditTask(for task: Task)
 }
 
 final class TaskListViewController: UIViewController {
@@ -90,6 +91,11 @@ extension TaskListViewController: TaskListPresenterToViewProtocol {
 }
 
 extension TaskListViewController: UICollectionViewDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        collectionView.deselectItem(at: indexPath, animated: false)
+        presenter?.showEditTask(for: tasks[indexPath.item])
+    }
     
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemsAt indexPaths: [IndexPath], point: CGPoint) -> UIContextMenuConfiguration? {
         UIContextMenuConfiguration(actionProvider:  { _ in

@@ -104,7 +104,7 @@ extension TaskStorageService {
         }
     }
     
-    func update(id: Int, taskDescription: String, completion: ((Error?) -> Void)? = nil) {
+    func update(id: Int, taskDescription: String?, completion: ((Error?) -> Void)? = nil) {
         update(id: id) { taskEntity in
             taskEntity.taskDescription = taskDescription
         } completion: { error in
