@@ -51,13 +51,6 @@ final class TaskListViewController: UIViewController {
         return label
     }()
     
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.locale = Locale(languageCode: .english, languageRegion: .unitedStates)
-        return formatter
-    }()
-    
     private let searchController = UISearchController(searchResultsController: nil)
     
     private var tasks = [Task]()
@@ -65,9 +58,11 @@ final class TaskListViewController: UIViewController {
     private lazy var dataSource = makeDiffableDataSource()
     
     let presenter: TaskListViewToPresenterProtocol
+    let dateFormatter: DateFormatter
     
-    init(presenter: TaskListViewToPresenterProtocol) {
+    init(presenter: TaskListViewToPresenterProtocol, dateFormatter: DateFormatter) {
         self.presenter = presenter
+        self.dateFormatter = dateFormatter
         super.init(nibName: nil, bundle: nil)
     }
     

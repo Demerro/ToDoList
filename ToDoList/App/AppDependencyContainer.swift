@@ -15,5 +15,12 @@ final class AppDependencyContainer {
     
     private(set) lazy var networkService = NetworkService()
     
-    private(set) lazy var appRouter = AppRouter(dependencies: self)
+    private(set) lazy var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.locale = Locale(languageCode: .english, languageRegion: .unitedStates)
+        return formatter
+    }()
+    
+    private(set) lazy var appRouter = AppRouter(dependencyContainer: self)
 }

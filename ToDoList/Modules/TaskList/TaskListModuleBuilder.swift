@@ -9,10 +9,14 @@ import UIKit
 
 struct TaskListModuleBuilder {
     
-    static func build(appRouter: AppRouterProtocol, networkService: NetworkService, taskStorageService: TaskStorageService) -> UIViewController {
-        let presenter = TaskListPresenter(router: appRouter)
-        let view = TaskListViewController(presenter: presenter)
-        let interactor = TaskListInteractor(presenter: presenter, networkService: networkService, taskStorageService: taskStorageService)
+    static func build(dependencyContainer: AppDependencyContainer) -> UIViewController {
+        let presenter = TaskListPresenter(router: dependencyContainer.appRouter)
+        let view = TaskListViewController(presenter: presenter, dateFormatter: dependencyContainer.dateFormatter)
+        let interactor = TaskListInteractor(
+            presenter: presenter,
+            networkService: dependencyContainer.networkService,
+            taskStorageService: dependencyContainer.taskStorageService
+        )
         
         presenter.interactor = interactor
         presenter.view = view

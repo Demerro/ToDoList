@@ -24,13 +24,14 @@ protocol AppRouterProtocol: AnyObject {
 
 final class AppRouter {
     
-    let navigationController = UINavigationController()
-    private let dependencies: AppDependencyContainer
+    let navigationController = UINavigationController(navigationBarClass: NavigationBar.self, toolbarClass: nil)
+    private let dependencyContainer: AppDependencyContainer
 
-    init(dependencies: AppDependencyContainer) {
-        self.dependencies = dependencies
+    init(dependencyContainer: AppDependencyContainer) {
+        self.dependencyContainer = dependencyContainer
         navigationController.navigationBar.prefersLargeTitles = true
         navigationController.isToolbarHidden = false
+        (navigationController.navigationBar as! NavigationBar).subtitleLabel.isHidden = true
     }
 }
 
@@ -43,12 +44,12 @@ extension AppRouter: AppRouterProtocol {
     }
     
     func showTaskList() {
-        let module = TaskListModuleBuilder.build(appRouter: self, networkService: dependencies.networkService, taskStorageService: dependencies.taskStorageService)
+        let module = TaskListModuleBuilder.build(dependencyContainer: dependencyContainer)
         navigationController.setViewControllers([module], animated: false)
     }
     
     func showEditTask(task: Task, delegate: EditTaskModuleDelegate?) {
-        let module = EditTaskModuleBuilder.build(task: task, appRouter: self, taskStorageService: dependencies.taskStorageService, delegate: delegate)
+        let module = EditTaskModuleBuilder.build(task: task, dependencyContainer: dependencyContainer, delegate: delegate)
         navigationController.pushViewController(module, animated: true)
     }
     

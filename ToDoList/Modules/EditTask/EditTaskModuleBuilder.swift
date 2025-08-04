@@ -13,10 +13,10 @@ protocol EditTaskModuleDelegate: AnyObject {
 
 struct EditTaskModuleBuilder {
     
-    static func build(task: Task, appRouter: AppRouterProtocol, taskStorageService: TaskStorageService, delegate: EditTaskModuleDelegate?) -> UIViewController {
-        let presenter = EditTaskPresenter(task: task, router: appRouter)
-        let view = EditTaskViewController(task: task, presenter: presenter)
-        let interactor = EditTaskInteractor(presenter: presenter, taskStorageService: taskStorageService)
+    static func build(task: Task, dependencyContainer: AppDependencyContainer, delegate: EditTaskModuleDelegate?) -> UIViewController {
+        let presenter = EditTaskPresenter(task: task, router: dependencyContainer.appRouter)
+        let view = EditTaskViewController(task: task, presenter: presenter, dateFormatter: dependencyContainer.dateFormatter)
+        let interactor = EditTaskInteractor(presenter: presenter, taskStorageService: dependencyContainer.taskStorageService)
         presenter.interactor = interactor
         presenter.delegate = delegate
         return view
