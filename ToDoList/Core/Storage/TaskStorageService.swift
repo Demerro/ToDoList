@@ -12,7 +12,7 @@ import os.log
 final class TaskStorageService {
     
     let coreDataStack: CoreDataStack
-    let backgroundContext: NSManagedObjectContext
+    private let backgroundContext: NSManagedObjectContext
     
     init(coreDataStack: CoreDataStack) {
         self.coreDataStack = coreDataStack

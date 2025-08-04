@@ -9,7 +9,7 @@ import Foundation
 import os.log
 
 protocol TaskListInteractorToPresenterProtocol: AnyObject {
-    func didReceiveDTOs(_ taskDTOs: [TaskDTO])
+    func didReceiveTasks(_ tasks: [Task])
     func didReceiveTaskEntities(_ entities: [TaskEntity])
     func didFailToReceiveTasks(with error: Error)
 }
@@ -46,7 +46,8 @@ extension TaskListInteractor {
             case .success(let data):
                 do {
                     Logger.taskList.info("Successfully fetched tasks from network.")
-                    presenter.didReceiveDTOs(try jsonDecoder.decode(TaskResults.self, from: data).todos)
+                    let taskDTOs = try jsonDecoder.decode(TaskResults.self, from: data).todos
+                    saveTasksToStorage(taskDTOs: taskDTOs)
                 } catch {
                     Logger.taskList.error("Failed to decode tasks: \(error)")
                     presenter.didFailToReceiveTasks(with: error)
@@ -68,6 +69,23 @@ extension TaskListInteractor {
             case .failure(let error):
                 Logger.taskList.error("Failed to fetch tasks from storage: \(error)")
                 presenter.didFailToReceiveTasks(with: error)
+            }
+        }
+    }
+}
+
+extension TaskListInteractor {
+    
+    private func saveTasksToStorage(taskDTOs: [TaskDTO]) {
+        let tasks = taskDTOs.map { Task(id: $0.id, title: $0.todo, isCompleted: $0.completed, date: Date()) }
+        taskStorageService.create(tasks: tasks) { [weak presenter] error in
+            if let error {
+                Logger.taskList.error("Failed to create tasks in storage: \(error)")
+                presenter?.didFailToReceiveTasks(with: error)
+            } else {
+                Logger.taskList.info("Successfully created tasks in storage.")
+                presenter?.didReceiveTasks(tasks)
+                UserDefaults.standard.setHasLaunchedBefore(true)
             }
         }
     }

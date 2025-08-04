@@ -37,10 +37,7 @@ extension TaskListPresenter: TaskListViewToPresenterProtocol {
 
 extension TaskListPresenter: TaskListInteractorToPresenterProtocol {
     
-    func didReceiveDTOs(_ taskDTOs: [TaskDTO]) {
-        let tasks = taskDTOs.map {
-            Task(id: $0.id, title: $0.todo, isCompleted: $0.completed, date: Date())
-        }
+    func didReceiveTasks(_ tasks: [Task]) {
         DispatchQueue.main.async {
             self.view.displayTasks(tasks)
         }
