@@ -26,47 +26,66 @@ extension TaskStorageServiceTests {
     
     func testCreateTask() {
         // Given
-        let title = "Test Task"
-        let description = "Test Description"
-        let date = Date()
-        let isCompleted = false
+        let task = Task(
+            id: 1,
+            title: "Test Task",
+            isCompleted: false,
+            date: Date(),
+            description: "Test Description"
+        )
         
         // When
-        sut.create(title: title, taskDescription: description, date: date, isCompleted: isCompleted)
+        let createExpectation = XCTestExpectation(description: "Task created")
+        sut.create(task: task) { error in
+            XCTAssertNil(error)
+            createExpectation.fulfill()
+        }
         
         // Then
-        let expectation = XCTestExpectation(description: "Task created")
+        let fetchExpectation = XCTestExpectation(description: "Task fetched")
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.sut.getAllTasks { result in
                 switch result {
                 case .success(let tasks):
                     XCTAssertEqual(tasks.count, 1)
-                    let task = tasks.first!
-                    XCTAssertEqual(task.title, title)
-                    XCTAssertEqual(task.taskDescription, description)
-                    XCTAssertEqual(task.isCompleted, isCompleted)
+                    let taskEntity = tasks.first!
+                    XCTAssertEqual(taskEntity.id, task.id)
+                    XCTAssertEqual(taskEntity.title, task.title)
+                    XCTAssertEqual(taskEntity.taskDescription, task.description)
+                    XCTAssertEqual(taskEntity.isCompleted, task.isCompleted)
                 case .failure:
                     XCTFail("Failed to fetch tasks")
                 }
-                expectation.fulfill()
+                fetchExpectation.fulfill()
             }
         }
         
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: [createExpectation, fetchExpectation], timeout: 1.0)
     }
     
     func testCreateMultipleTasks() {
         // Given
         let tasksCount = 3
+        let createExpectations = (0..<tasksCount).map { _ in XCTestExpectation(description: "Task created") }
         
         // When
         for i in 0..<tasksCount {
-            sut.create(title: "Task \(i)", taskDescription: "Description \(i)", date: Date(), isCompleted: false)
+            let task = Task(
+                id: i + 1,
+                title: "Task \(i)",
+                isCompleted: false,
+                date: Date(),
+                description: "Description \(i)"
+            )
+            sut.create(task: task) { error in
+                XCTAssertNil(error)
+                createExpectations[i].fulfill()
+            }
         }
         
         // Then
-        let expectation = XCTestExpectation(description: "Multiple tasks created")
+        let fetchExpectation = XCTestExpectation(description: "Multiple tasks fetched")
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.sut.getAllTasks { result in
@@ -76,11 +95,11 @@ extension TaskStorageServiceTests {
                 case .failure:
                     XCTFail("Failed to fetch tasks")
                 }
-                expectation.fulfill()
+                fetchExpectation.fulfill()
             }
         }
         
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: createExpectations + [fetchExpectation], timeout: 1.0)
     }
 }
 
@@ -111,11 +130,39 @@ extension TaskStorageServiceTests {
         let earlierDate = Date().addingTimeInterval(-3600) // 1 hour ago
         let laterDate = Date()
         
-        sut.create(title: "Earlier Task", taskDescription: "Description", date: earlierDate, isCompleted: false)
-        sut.create(title: "Later Task", taskDescription: "Description", date: laterDate, isCompleted: false)
+        let earlierTask = Task(
+            id: 1,
+            title: "Earlier Task",
+            isCompleted: false,
+            date: earlierDate,
+            description: "Description"
+        )
+        
+        let laterTask = Task(
+            id: 2,
+            title: "Later Task",
+            isCompleted: false,
+            date: laterDate,
+            description: "Description"
+        )
+        
+        let createExpectations = [
+            XCTestExpectation(description: "Earlier task created"),
+            XCTestExpectation(description: "Later task created")
+        ]
+        
+        sut.create(task: earlierTask) { error in
+            XCTAssertNil(error)
+            createExpectations[0].fulfill()
+        }
+        
+        sut.create(task: laterTask) { error in
+            XCTAssertNil(error)
+            createExpectations[1].fulfill()
+        }
         
         // When & Then
-        let expectation = XCTestExpectation(description: "Tasks sorted by date")
+        let fetchExpectation = XCTestExpectation(description: "Tasks sorted by date")
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             self?.sut.getAllTasks { result in
@@ -128,11 +175,11 @@ extension TaskStorageServiceTests {
                 case .failure:
                     XCTFail("Failed to fetch tasks")
                 }
-                expectation.fulfill()
+                fetchExpectation.fulfill()
             }
         }
         
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: createExpectations + [fetchExpectation], timeout: 1.0)
     }
 }
 
@@ -143,64 +190,154 @@ extension TaskStorageServiceTests {
         // Given
         let originalTitle = "Original Title"
         let newTitle = "Updated Title"
+        let taskId = 1
         
-        sut.create(title: originalTitle, taskDescription: "Description", date: Date(), isCompleted: false)
+        let task = Task(
+            id: taskId,
+            title: originalTitle,
+            isCompleted: false,
+            date: Date(),
+            description: "Description"
+        )
         
-        let expectation = XCTestExpectation(description: "Task title updated")
+        let createExpectation = XCTestExpectation(description: "Task created")
+        sut.create(task: task) { error in
+            XCTAssertNil(error)
+            createExpectation.fulfill()
+        }
+        
+        let updateExpectation = XCTestExpectation(description: "Task title updated")
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             guard let self = self else { return }
             
-            // Get the created task UUID
-            self.sut.getAllTasks { result in
-                switch result {
-                case .success(let tasks):
-                    guard let task = tasks.first else {
-                        XCTFail("No task found")
-                        expectation.fulfill()
-                        return
+            // When - update the title
+            self.sut.update(id: taskId, title: newTitle) { error in
+                XCTAssertNil(error)
+                
+                // Then - verify the update
+                self.sut.getAllTasks { result in
+                    switch result {
+                    case .success(let updatedTasks):
+                        XCTAssertEqual(updatedTasks.count, 1)
+                        XCTAssertEqual(updatedTasks.first?.title, newTitle)
+                        XCTAssertEqual(updatedTasks.first?.id, taskId)
+                    case .failure:
+                        XCTFail("Failed to fetch updated tasks")
                     }
-                    
-                    // When - update the title
-                    self.sut.update(uuid: task.uuid, title: newTitle) { error in
-                        XCTAssertNil(error)
-                        
-                        // Then - verify the update
-                        self.sut.getAllTasks { result in
-                            switch result {
-                            case .success(let updatedTasks):
-                                XCTAssertEqual(updatedTasks.count, 1)
-                                XCTAssertEqual(updatedTasks.first?.title, newTitle)
-                                XCTAssertEqual(updatedTasks.first?.uuid, task.uuid)
-                            case .failure:
-                                XCTFail("Failed to fetch updated tasks")
-                            }
-                            expectation.fulfill()
-                        }
-                    }
-                case .failure:
-                    XCTFail("Failed to fetch tasks")
-                    expectation.fulfill()
+                    updateExpectation.fulfill()
                 }
             }
         }
         
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [createExpectation, updateExpectation], timeout: 2.0)
     }
     
     func testUpdateNonExistentTask() {
         // Given
-        let nonExistentUUID = UUID()
+        let nonExistentId = 999
         
         // When & Then
         let expectation = XCTestExpectation(description: "Update non-existent task")
         
-        sut.update(uuid: nonExistentUUID, title: "New Title") { error in
+        sut.update(id: nonExistentId, title: "New Title") { error in
             XCTAssertNotNil(error)
+            if let error = error, case let TaskStorageService.Error.taskNotFound(id) = error {
+                XCTAssertEqual(id, nonExistentId)
+            } else {
+                XCTFail("Expected taskNotFound error")
+            }
             expectation.fulfill()
         }
         
         wait(for: [expectation], timeout: 1.0)
+    }
+    
+    func testUpdateTaskDescription() {
+        // Given
+        let taskId = 1
+        let newDescription = "Updated Description"
+        
+        let task = Task(
+            id: taskId,
+            title: "Title",
+            isCompleted: false,
+            date: Date(),
+            description: "Original Description"
+        )
+        
+        let createExpectation = XCTestExpectation(description: "Task created")
+        sut.create(task: task) { error in
+            XCTAssertNil(error)
+            createExpectation.fulfill()
+        }
+        
+        let updateExpectation = XCTestExpectation(description: "Task description updated")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self = self else { return }
+            
+            // When
+            self.sut.update(id: taskId, taskDescription: newDescription) { error in
+                XCTAssertNil(error)
+                
+                // Then
+                self.sut.getAllTasks { result in
+                    switch result {
+                    case .success(let tasks):
+                        XCTAssertEqual(tasks.first?.taskDescription, newDescription)
+                    case .failure:
+                        XCTFail("Failed to fetch updated tasks")
+                    }
+                    updateExpectation.fulfill()
+                }
+            }
+        }
+        
+        wait(for: [createExpectation, updateExpectation], timeout: 2.0)
+    }
+    
+    func testUpdateTaskCompletion() {
+        // Given
+        let taskId = 1
+        
+        let task = Task(
+            id: taskId,
+            title: "Title",
+            isCompleted: false,
+            date: Date(),
+            description: "Description"
+        )
+        
+        let createExpectation = XCTestExpectation(description: "Task created")
+        sut.create(task: task) { error in
+            XCTAssertNil(error)
+            createExpectation.fulfill()
+        }
+        
+        let updateExpectation = XCTestExpectation(description: "Task completion updated")
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self = self else { return }
+            
+            // When
+            self.sut.update(id: taskId, isCompleted: true) { error in
+                XCTAssertNil(error)
+                
+                // Then
+                self.sut.getAllTasks { result in
+                    switch result {
+                    case .success(let tasks):
+                        XCTAssertEqual(tasks.first?.isCompleted, true)
+                    case .failure:
+                        XCTFail("Failed to fetch updated tasks")
+                    }
+                    updateExpectation.fulfill()
+                }
+            }
+        }
+        
+        wait(for: [createExpectation, updateExpectation], timeout: 2.0)
     }
 }
 
@@ -209,68 +346,61 @@ extension TaskStorageServiceTests {
     
     func testDeleteExistingTask() {
         // Given
-        sut.create(title: "Task to Delete", taskDescription: "Description", date: Date(), isCompleted: false)
+        let taskId = 1
+        let task = Task(
+            id: taskId,
+            title: "Task to Delete",
+            isCompleted: false,
+            date: Date(),
+            description: "Description"
+        )
         
-        let expectation = XCTestExpectation(description: "Task deleted")
+        let createExpectation = XCTestExpectation(description: "Task created")
+        sut.create(task: task) { error in
+            XCTAssertNil(error)
+            createExpectation.fulfill()
+        }
+        
+        let deleteExpectation = XCTestExpectation(description: "Task deleted")
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             guard let self = self else { return }
             
-            // Get the created task UUID
-            self.sut.getAllTasks { result in
-                switch result {
-                case .success(let tasks):
-                    guard let task = tasks.first else {
-                        XCTFail("No task found")
-                        expectation.fulfill()
-                        return
+            // When - delete the task
+            self.sut.delete(id: taskId) { error in
+                XCTAssertNil(error)
+                
+                // Then - verify deletion
+                self.sut.getAllTasks { result in
+                    switch result {
+                    case .success(let remainingTasks):
+                        XCTAssertTrue(remainingTasks.isEmpty)
+                    case .failure:
+                        XCTFail("Failed to fetch tasks after deletion")
                     }
-                    
-                    // When - delete the task
-                    self.sut.delete(uuid: task.uuid)
-                    
-                    // Then - verify deletion
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        self.sut.getAllTasks { result in
-                            switch result {
-                            case .success(let remainingTasks):
-                                XCTAssertTrue(remainingTasks.isEmpty)
-                            case .failure:
-                                XCTFail("Failed to fetch tasks after deletion")
-                            }
-                            expectation.fulfill()
-                        }
-                    }
-                case .failure:
-                    XCTFail("Failed to fetch tasks")
-                    expectation.fulfill()
+                    deleteExpectation.fulfill()
                 }
             }
         }
         
-        wait(for: [expectation], timeout: 2.0)
+        wait(for: [createExpectation, deleteExpectation], timeout: 2.0)
     }
     
     func testDeleteNonExistentTask() {
         // Given
-        let nonExistentUUID = UUID()
+        let nonExistentId = 999
         
-        // When
-        sut.delete(uuid: nonExistentUUID)
-        
-        // Then - verify no crash and tasks remain empty
+        // When & Then
         let expectation = XCTestExpectation(description: "Delete non-existent task")
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.sut.getAllTasks { result in
-                switch result {
-                case .success(let tasks):
-                    XCTAssertTrue(tasks.isEmpty)
-                case .failure:
-                    XCTFail("Failed to fetch tasks")
-                }
-                expectation.fulfill()
+        sut.delete(id: nonExistentId) { error in
+            XCTAssertNotNil(error)
+            if let error = error, case let TaskStorageService.Error.taskNotFound(id) = error {
+                XCTAssertEqual(id, nonExistentId)
+            } else {
+                XCTFail("Expected taskNotFound error")
             }
+            expectation.fulfill()
         }
         
         wait(for: [expectation], timeout: 1.0)

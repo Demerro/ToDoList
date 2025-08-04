@@ -22,20 +22,21 @@ final class TaskStorageService {
 
 extension TaskStorageService {
     
-    func create(id: Int, title: String, taskDescription: String, date: Date, isCompleted: Bool, completion: ((Error?) -> Void)? = nil) {
+    func create(task: Task, completion: ((Error?) -> Void)? = nil) {
         let context = coreDataStack.makeBackgroundContext()
-        context.perform { [weak coreDataStack] in
-            guard let coreDataStack else { return }
+        context.perform { [weak self] in
+            guard let coreDataStack = self?.coreDataStack else { return }
             let taskEntity = TaskEntity(context: context)
-            taskEntity.id = id
-            taskEntity.title = title
-            taskEntity.taskDescription = taskDescription
-            taskEntity.date = date
-            taskEntity.isCompleted = isCompleted
+            taskEntity.id = task.id
+            taskEntity.title = task.title
+            taskEntity.taskDescription = task.description
+            taskEntity.date = task.date
+            taskEntity.isCompleted = task.isCompleted
             
             do {
                 try coreDataStack.save(context: context)
-                Logger.storage.info("Task created successfully: \(title)")
+                Logger.storage.info("Task created successfully: \(task.id)")
+                completion?(nil)
             } catch {
                 Logger.storage.error("Failed to create task: \(error)")
                 completion?(Error.failedToCreateTask(error: error))
@@ -65,54 +66,54 @@ extension TaskStorageService {
 
 extension TaskStorageService {
     
-    func update(uuid: UUID, title: String, completion: ((Error?) -> Void)? = nil) {
-        update(uuid: uuid) { taskEntity in
+    func update(id: Int, title: String, completion: ((Error?) -> Void)? = nil) {
+        update(id: id) { taskEntity in
             taskEntity.title = title
         } completion: { error in
             completion?(error)
         }
     }
     
-    func update(uuid: UUID, taskDescription: String, completion: ((Error?) -> Void)? = nil) {
-        update(uuid: uuid) { taskEntity in
+    func update(id: Int, taskDescription: String, completion: ((Error?) -> Void)? = nil) {
+        update(id: id) { taskEntity in
             taskEntity.taskDescription = taskDescription
         } completion: { error in
             completion?(error)
         }
     }
     
-    func update(uuid: UUID, date: Date, completion: ((Error?) -> Void)? = nil) {
-        update(uuid: uuid) { taskEntity in
+    func update(id: Int, date: Date, completion: ((Error?) -> Void)? = nil) {
+        update(id: id) { taskEntity in
             taskEntity.date = date
         } completion: { error in
             completion?(error)
         }
     }
     
-    func update(uuid: UUID, isCompleted: Bool, completion: ((Error?) -> Void)? = nil) {
-        update(uuid: uuid) { taskEntity in
+    func update(id: Int, isCompleted: Bool, completion: ((Error?) -> Void)? = nil) {
+        update(id: id) { taskEntity in
             taskEntity.isCompleted = isCompleted
         } completion: { error in
             completion?(error)
         }
     }
     
-    private func update(uuid: UUID, updating: @escaping (TaskEntity) -> Void, completion: @escaping (Error?) -> Void) {
+    private func update(id: Int, updating: @escaping (TaskEntity) -> Void, completion: @escaping (Error?) -> Void) {
         backgroundContext.perform { [weak self] in
             guard let self else { return }
             do {
-                guard let taskEntity = try backgroundContext.fetch(Self.makeFetchRequest(uuid: uuid)).first else {
-                    Logger.storage.error("Task with UUID \(uuid) not found for update.")
-                    completion(Error.taskNotFound(uuid: uuid))
+                guard let taskEntity = try backgroundContext.fetch(Self.makeFetchRequest(id: id)).first else {
+                    Logger.storage.error("Task with UUID \(id) not found for update.")
+                    completion(Error.taskNotFound(id: id))
                     return
                 }
                 updating(taskEntity)
                 try coreDataStack.save(context: backgroundContext)
-                Logger.storage.info("Task \(uuid) updated successfully.")
+                Logger.storage.info("Task \(id) updated successfully.")
                 completion(nil)
             } catch {
-                Logger.storage.error("Failed to update task \(uuid): \(error)")
-                completion(Error.failedToUpdateTask(uuid: uuid, error: error))
+                Logger.storage.error("Failed to update task \(id): \(error)")
+                completion(Error.failedToUpdateTask(id: id, error: error))
             }
         }
     }
@@ -120,23 +121,23 @@ extension TaskStorageService {
 
 extension TaskStorageService {
     
-    func delete(uuid: UUID, completion: ((Error?) -> Void)? = nil) {
+    func delete(id: Int, completion: ((Error?) -> Void)? = nil) {
         backgroundContext.perform { [weak self] in
             guard let self else { return }
             do {
-                let fetchRequest = Self.makeFetchRequest(uuid: uuid, includesPropertyValues: false)
+                let fetchRequest = Self.makeFetchRequest(id: id, includesPropertyValues: false)
                 guard let taskEntity = try backgroundContext.fetch(fetchRequest).first else {
-                    Logger.storage.error("Task with UUID \(uuid) not found for deletion.")
-                    completion?(Error.taskNotFound(uuid: uuid))
+                    Logger.storage.error("Task with ID \(id) not found for deletion.")
+                    completion?(Error.taskNotFound(id: id))
                     return
                 }
                 backgroundContext.delete(taskEntity)
                 try coreDataStack.save(context: backgroundContext)
-                Logger.storage.info("Task \(uuid) deleted successfully.")
+                Logger.storage.info("Task \(id) deleted successfully.")
                 completion?(nil)
             } catch {
-                Logger.storage.error("Failed to delete task \(uuid): \(error)")
-                completion?(Error.failedToDeleteTask(uuid: uuid))
+                Logger.storage.error("Failed to delete task \(id): \(error)")
+                completion?(Error.failedToDeleteTask(id: id))
             }
         }
     }
@@ -144,9 +145,9 @@ extension TaskStorageService {
 
 extension TaskStorageService {
     
-    private static func makeFetchRequest(uuid: UUID, includesPropertyValues: Bool = true) -> NSFetchRequest<TaskEntity> {
+    private static func makeFetchRequest(id: Int, includesPropertyValues: Bool = true) -> NSFetchRequest<TaskEntity> {
         let fetchRequest = TaskEntity.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "uuid == %@", uuid as CVarArg)
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as NSNumber)
         fetchRequest.includesPropertyValues = includesPropertyValues
         return fetchRequest
     }
@@ -155,10 +156,10 @@ extension TaskStorageService {
 extension TaskStorageService {
     
     enum Error: Swift.Error {
-        case taskNotFound(uuid: UUID)
+        case taskNotFound(id: Int)
         case failedToCreateTask(error: Swift.Error)
         case failedToFetchTasks(error: Swift.Error)
-        case failedToUpdateTask(uuid: UUID, error: Swift.Error)
-        case failedToDeleteTask(uuid: UUID)
+        case failedToUpdateTask(id: Int, error: Swift.Error)
+        case failedToDeleteTask(id: Int)
     }
 }
