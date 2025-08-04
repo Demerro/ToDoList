@@ -11,6 +11,7 @@ protocol AppRouterProtocol: AnyObject {
     func showErrorAlert(title: String, message: String)
     func showTaskList()
     func showEditTask(task: Task, delegate: EditTaskModuleDelegate?)
+    func showActivityViewController(for task: Task)
 }
 
 final class AppRouter {
@@ -39,5 +40,14 @@ extension AppRouter: AppRouterProtocol {
     func showEditTask(task: Task, delegate: EditTaskModuleDelegate?) {
         let module = EditTaskModuleBuilder.build(task: task, appRouter: self, taskStorageService: dependencies.taskStorageService, delegate: delegate)
         navigationController.pushViewController(module, animated: true)
+    }
+    
+    func showActivityViewController(for task: Task) {
+        var items = [task.title]
+        if let description = task.description {
+            items.append(description)
+        }
+        let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        navigationController.present(activityViewController, animated: true)
     }
 }

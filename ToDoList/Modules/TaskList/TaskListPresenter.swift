@@ -43,6 +43,10 @@ extension TaskListPresenter: TaskListViewToPresenterProtocol {
     func deleteTask(_ task: Task) {
         interactor?.deleteTask(task)
     }
+    
+    func shareTask(_ task: Task) {
+        router.showActivityViewController(for: task)
+    }
 }
 
 extension TaskListPresenter: TaskListInteractorToPresenterProtocol {

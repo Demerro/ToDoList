@@ -11,6 +11,7 @@ protocol TaskListViewToPresenterProtocol: AnyObject {
     func getTasks()
     func showEditTask(for task: Task)
     func deleteTask(_ task: Task)
+    func shareTask(_ task: Task)
 }
 
 final class TaskListViewController: UIViewController {
@@ -130,7 +131,11 @@ extension TaskListViewController: UICollectionViewDelegate {
                         presenter.showEditTask(for: tasks[indexPath.item])
                     }
                 }),
-                UIAction(title: "Поделиться", image: UIImage(systemName: "square.and.arrow.up")!, handler: { _ in }),
+                UIAction(title: "Поделиться", image: UIImage(systemName: "square.and.arrow.up")!, handler: { [unowned self] _ in
+                    if let indexPath = indexPaths.first {
+                        presenter.shareTask(tasks[indexPath.item])
+                    }
+                }),
                 UIAction(title: "Удалить", image: UIImage(systemName: "trash")!, attributes: .destructive, handler: { [unowned self] _ in
                     if let indexPath = indexPaths.first {
                         presenter.deleteTask(tasks[indexPath.item])
