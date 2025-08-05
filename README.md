@@ -18,10 +18,9 @@ ToDoList is an iOS application designed to help users manage and organize their 
 
 ## Screenshots
 
-| Screenshot  | Description        |
-|-------------|--------------------|
-| ![image1](image1) | Example Screenshot 1 |
-| ![image2](image2) | Example Screenshot 2 |
+| Task List  | Edit Task |
+|------------|----------|
+|  <img width="1206" height="2622" alt="Simulator Screenshot - iPhone 16 Pro - 2025-08-05 at 16 39 40" src="https://github.com/user-attachments/assets/6056c017-0fce-4764-a8c5-93b03e697ea5" /> | <img width="1206" height="2622" alt="Simulator Screenshot - iPhone 16 Pro - 2025-08-05 at 16 39 46" src="https://github.com/user-attachments/assets/f1fbe97e-432a-48c7-a3b9-7d4747a0a285" /> |
 
 ## Getting Started
 
