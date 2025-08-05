@@ -18,8 +18,10 @@ ToDoList is an iOS application designed to help users manage and organize their 
 
 ## Screenshots
 
-![image1](image1)
-![image2](image2)
+| Screenshot  | Description        |
+|-------------|--------------------|
+| ![image1](image1) | Example Screenshot 1 |
+| ![image2](image2) | Example Screenshot 2 |
 
 ## Getting Started
 
@@ -41,14 +43,6 @@ ToDoList is an iOS application designed to help users manage and organize their 
    ```
 
 3. Build and run the project on a simulator or a physical device.
-
-## Contributing
-
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
 
